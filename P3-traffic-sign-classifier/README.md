@@ -15,10 +15,6 @@ Project Structure
 
 - **[writeup.md](./writeup.md):** Writeup of the implementation describing the full development cycle and subsequent training, validation and test results of the model.
 
-- **[data](./data):** Directory containing the original data set.
-
-- **[augmented_data](./augmented_data):** Directory containing the augmented training data used to train the model.
-
 ### Dependencies
 The IPython notebook can be run using a Jupyter Notebook app such as Anaconda. The project depends on the following libraries:
 - NumPy
