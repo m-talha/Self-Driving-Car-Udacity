@@ -1,10 +1,18 @@
 # Extended Kalman Filter Project Starter Code
-Self-Driving Car Engineer Nanodegree Program
+[![Udacity - Self-Driving Car NanoDegree](https://s3.amazonaws.com/udacity-sdc/github/shield-carnd.svg)](http://www.udacity.com/drive)
 
 ---
 
 ## Overview
-In this project you will utilize a kalman filter to estimate the state of a moving object of interest with noisy lidar and radar measurements. Passing the project requires obtaining RMSE values that are lower than the tolerance outlined in the project rubric. 
+In this project, a Kalman Filter is used to estimate the state of a moving object of interest with noisy lidar and radar measurements.
+
+---
+
+## Project Structure
+
+- **[src](./src):** Folder containing the C++ source files
+- **[CMakeLists.txt](./CMakeLists.txt):** CMake configuration file
+- **[data](./data):** Folder containing example dataset with ground truth data for evaluating the Kalman Filter
 
 ---
 

@@ -57,13 +57,14 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   // Normalise theta to between -pi and pi
   while (theta > M_PI || theta < -M_PI) {
+    std::cout << theta << std::endl;
     if (theta > M_PI) {
       theta -= 2 * M_PI;
     } else if (theta < -M_PI) {
       theta += 2 * M_PI;
     }
   }
-  std::cout << theta << std::endl;
+
   // Check for division by zero
   float rho_dot;
   if (fabs(rho) < 0.0001) {
@@ -83,7 +84,6 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
 void KalmanFilter::UpdateKF(const Eigen::VectorXd &y) {
   // Measurement uncertainty
-
   MatrixXd S = H_ * P_ * H_.transpose() + R_;
   // Kalman gain (weighted combination of prediction and measurement uncertainty)
   MatrixXd K = P_ * H_.transpose() * S.inverse();
