@@ -41,7 +41,7 @@ void KalmanFilter::Update(const VectorXd &z) {
   VectorXd y = z - H_ * x_;
   UpdateKF(y);
 }
-#include <iostream>
+
 /**
  * Update the state by using Extended Kalman Filter equations
  */
@@ -57,11 +57,10 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
 
   // Normalise theta to between -pi and pi
   while (theta > M_PI || theta < -M_PI) {
-    std::cout << theta << std::endl;
     if (theta > M_PI) {
-      theta -= 2 * M_PI;
+      theta -= 2. * M_PI;
     } else if (theta < -M_PI) {
-      theta += 2 * M_PI;
+      theta += 2. * M_PI;
     }
   }
 
@@ -77,16 +76,20 @@ void KalmanFilter::UpdateEKF(const VectorXd &z) {
   z_pred << rho, theta, rho_dot;
   // Calculate error given measurement
   VectorXd y = z - z_pred;
+  // angle normalization
+  while (y(1)> M_PI) y(1)-=2.*M_PI;
+  while (y(1)<-M_PI) y(1)+=2.*M_PI;
 
   // Calculate rest of the equations as normal
   UpdateKF(y);
 }
 
 void KalmanFilter::UpdateKF(const Eigen::VectorXd &y) {
+  MatrixXd C = P_ * H_.transpose();
   // Measurement uncertainty
-  MatrixXd S = H_ * P_ * H_.transpose() + R_;
+  MatrixXd S = H_ * C + R_;
   // Kalman gain (weighted combination of prediction and measurement uncertainty)
-  MatrixXd K = P_ * H_.transpose() * S.inverse();
+  MatrixXd K = C * S.inverse();
   // Updated state and covariance
   x_ = x_ + K * y;
   P_ = (I_ - K * H_) * P_;
