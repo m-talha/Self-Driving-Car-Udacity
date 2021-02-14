@@ -72,10 +72,10 @@ inline double multi_gauss(double x, double y, double mu_x, double mu_y,
                           double sigma_x, double sigma_y) {
   double gauss_norm = 1 / (2 * M_PI * sigma_x * sigma_y);
 
-  double exponent = exp(-((pow(x - mu_x, 2) / (2 * pow(sigma_x, 2))) 
-                    + (pow(y - mu_y, 2) / (2 * pow(sigma_y, 2)))));
+  double exponent = (pow(x - mu_x, 2) / (2 * pow(sigma_x, 2))) 
+                    + (pow(y - mu_y, 2) / (2 * pow(sigma_y, 2)));
 
-  return gauss_norm * exponent;
+  return gauss_norm * exp(-exponent);
 }
  
 

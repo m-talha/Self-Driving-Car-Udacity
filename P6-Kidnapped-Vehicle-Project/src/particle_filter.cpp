@@ -2,7 +2,7 @@
  * particle_filter.cpp
  *
  * Created on: Dec 12, 2016
- * Author: Tiffany Huang
+ * Author: Mohammed Talha & Tiffany Huang
  */
 
 #include "particle_filter.h"
@@ -22,7 +22,7 @@ using std::string;
 using std::vector;
 using std::normal_distribution;
 
-#define NUM_PARTICLES 50
+#define NUM_PARTICLES 10
 #define EPSILON 0.001
 #define OBSERVABLE_LANDMARKS 5
 
@@ -32,8 +32,6 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
    *   first position (based on estimates of x, y, theta and their uncertainties
    *   from GPS) and all weights to 1. 
    * Add random Gaussian noise to each particle.
-   * NOTE: Consult particle_filter.h for more information about this method 
-   *   (and others in this file).
    */
 
   num_particles = NUM_PARTICLES;  // Set the number of particles
@@ -56,6 +54,7 @@ void ParticleFilter::init(double x, double y, double theta, double std[]) {
     
   }
 
+  weights.resize(NUM_PARTICLES);
   is_initialized = true;
 
   // Testing
@@ -135,15 +134,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
    *   (look at equation 3.33) http://planning.cs.uiuc.edu/node99.html
    */
 
-  vector<LandmarkObs> map_observations(observations.size());
-  double weight = 1.0;
-  for (auto& particle : particles) {
+  for (auto i=0; i < particles.size(); ++i) {
+    double weight = 1.0;
     // Landmarks observable if this particle correctly represented the car state
     vector<Map::single_landmark_s> observable_landmarks;
     // Check if each landmark is within the detectable zone
     for (auto lmark : map_landmarks.landmark_list) {
-      if (dist(lmark.x_f, lmark.y_f, particle.x, particle.y) <= sensor_range) {
-        observable_landmarks.push_back(lmark);
+      if (dist(lmark.x_f, lmark.y_f, particles[i].x, particles[i].y) <= sensor_range) {
+        observable_landmarks.push_back(Map::single_landmark_s { lmark.id_i,
+                                                                lmark.x_f,
+                                                                lmark.y_f });
       }
     }
 
@@ -155,9 +155,8 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
     for (auto obs : observations) {
       LandmarkObs temp;
       temp.id = obs.id;
-      temp.x = particle.x + (cos(particle.theta) * obs.x) - (sin(particle.theta) * obs.y);
-      temp.y = particle.y + (sin(particle.theta) * obs.x) + (cos(particle.theta) * obs.y);
-      map_observations.push_back(temp);
+      temp.x = particles[i].x + (cos(particles[i].theta) * obs.x) - (sin(particles[i].theta) * obs.y);
+      temp.y = particles[i].y + (sin(particles[i].theta) * obs.x) + (cos(particles[i].theta) * obs.y);
 
       // For each observation, assign the closest observable landmark
       // Equivalent to dataAssociation function above
@@ -177,20 +176,16 @@ void ParticleFilter::updateWeights(double sensor_range, double std_landmark[],
       sense_x.push_back(lmark_x);
       sense_y.push_back(lmark_y);
 
-// print("Weight before ", weight);
       // Calculate weight of particle as product of observation probabilities
-      // auto x = multi_gauss(temp.x, temp.y, lmark_x, lmark_y, std_landmark[0], std_landmark[1]);
-// print("Prob ", x);
       weight *= multi_gauss(temp.x, temp.y, lmark_x, lmark_y, std_landmark[0], std_landmark[1]);
-// print("Weight after ", weight);
     }
 
     // Store associated landmarks for each particle 
-    SetAssociations(particle, associations, sense_x, sense_y);
+    SetAssociations(particles[i], associations, sense_x, sense_y);
     // Update particle weight
-    particle.weight = weight;
+    particles[i].weight = weight;
     // Store weights of each particle for resampling
-    weights.push_back(weight);
+    weights.at(i) = weight;
   }
 }
 
@@ -208,8 +203,9 @@ void ParticleFilter::resample() {
 
   // Sample n particles
   vector<Particle> resampled(particles.size());
-  for (int i = 0; i < NUM_PARTICLES; i++) {
-    resampled[i] = particles[dist_weights(gen)];
+  for (int i = 0; i < NUM_PARTICLES; ++i) {
+    auto j = dist_weights(gen);
+    resampled[i] = particles[j];
   }
 
   // Store resampled particles as new particles
