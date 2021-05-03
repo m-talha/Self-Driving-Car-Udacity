@@ -9,26 +9,12 @@
 #include "helpers.h"
 #include "json.hpp"
 #include "spline.h"
-#include "vehicle.hpp"
-#include "prediction.hpp"
 #include "config.hpp"
 
 // for convenience
 using nlohmann::json;
 using std::string;
 using std::vector;
-
-// *************************** MY CODE ***************************
-// Constants for lanes
-// constexpr double kLaneWidth = 4.0;
-// constexpr int kLeft = 0;
-// constexpr int kMiddle = 1;
-// constexpr int kRight = 2;
-// // Other constants
-// constexpr double kTimeStep = 0.02;        // timestep used by simulator
-// constexpr double kSafetyGap = 30.0;       // min. distance to maintain between cars
-// constexpr double kHorizonDistance = 30.0; // trajectory horizon distance
-// ************************ END OF MY CODE ***********************
 
 int main() {
   uWS::Hub h;
@@ -66,16 +52,6 @@ int main() {
     map_waypoints_dx.push_back(d_x);
     map_waypoints_dy.push_back(d_y);
   }
-
-  // *************************** MY CODE ***************************
-  // 1. initialise lane and max speed (m/s) & acceleration (m/s^2)
-  // int lane = kMiddle;
-  // double curr_speed = 0.0;
-  // double max_speed = 49.5 / 2.24;
-  // double max_accel = 0.224;
-  // Vehicle ego;
-  // Prediction prediction_module(ego);
-  // ************************ END OF MY CODE ***********************
 
   h.onMessage([&map_waypoints_x,&map_waypoints_y,&map_waypoints_s,
                &map_waypoints_dx,&map_waypoints_dy]
@@ -137,7 +113,7 @@ int main() {
           bool init_lane_switch = false;
           bool left_lane_available = true;
           bool right_lane_available = true;
-          std::map<int, int> car_lane; // store lane for each detected car
+          int car_lane; // store lane for each detected car
 
           // 1. Loop through sensor data for other cars
           for (auto i=0; i<sensor_fusion.size(); ++i) { 
@@ -145,13 +121,13 @@ int main() {
             // 2. Check and record car lane- assumes 3 lane highway of fixed width
             if (other_car[6] <= PathPlanner::kLaneWidth) {
               // Left lane
-              car_lane[other_car[0]] = PathPlanner::kLeft;
+              car_lane = PathPlanner::kLeft;
             } else if (other_car[6] > PathPlanner::kLaneWidth && other_car[6] <= PathPlanner::kLaneWidth*2) {
               // Middle lane
-              car_lane[other_car[0]] = PathPlanner::kMiddle;
+              car_lane = PathPlanner::kMiddle;
             } else if (other_car[6] > PathPlanner::kLaneWidth*2 && other_car[6] <= PathPlanner::kLaneWidth*3) {
               // Right lane
-              car_lane[other_car[0]] = PathPlanner::kRight;
+              car_lane = PathPlanner::kRight;
             }
 
             // 3. Get speed of car and distance
@@ -166,22 +142,20 @@ int main() {
             // 5. Check lane of the car and within a certain range e.g. 30m
             bool within_safe_gap =  abs(other_s - car_s) < PathPlanner::kSafetyGap;
             // Check car ahead in same lane within hotzone
-            if (car_lane[other_car[0]] == PathPlanner::lane && other_s > car_s && within_safe_gap) {
+            if (car_lane == PathPlanner::lane && other_s > car_s && within_safe_gap) {
               // i. Raise flag to reduce speed to avoid collision
               too_close = true;
               // ii. Raise flag to prepare to switch lanes
               init_lane_switch = true;
 
-            } else if (car_lane[other_car[0]] == PathPlanner::lane - 1 && within_safe_gap) {
+            } else if (car_lane == PathPlanner::lane - 1 && within_safe_gap) {
               // Car is in the left lane
               left_lane_available = false;
-            } else if (car_lane[other_car[0]] == PathPlanner::lane + 1 && within_safe_gap) {
+            } else if (car_lane == PathPlanner::lane + 1 && within_safe_gap) {
               // Car is in the right lane
               right_lane_available = false;
             } 
           }
-
-          // prediction_module.Update(j[1]);
 
 
           // 6. Slow down if car in front else speed up until limit
@@ -205,8 +179,6 @@ int main() {
               // std::cout << lane << std::endl;
             }
           }
-          
-
 
           // Trajectory Generation
           double dist_inc = 0.5;
