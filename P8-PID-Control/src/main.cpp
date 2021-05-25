@@ -46,20 +46,20 @@ int main()
 
   // Initialize the pid variable with coefficients
   PID pid;
-  double Kp = 0.1; //0.11; // 0.1;
-  double Ki = 0.0001;
-  double Kd = 3; //2.87; // 3;
+  double Kp = 0.25;
+  double Ki = 0.0003;
+  double Kd = 9;
   pid.Init(Kp, Ki, Kd);
 
   bool use_twiddle = false; // set to true to enable twiddle
 
-  Twiddle twiddle({0.001, 0.0001, 0.01}, 0.001, 3000, use_twiddle);
+  Twiddle twiddle({0.00065, 0.000032, 0.00071}, 0.001, 3500, use_twiddle);
 
   h.onMessage([&pid, &twiddle](uWS::WebSocket<uWS::SERVER> ws, char *data, size_t length,
                                uWS::OpCode opCode) {
     // "42" at the start of the message means there's a websocket message event.
     // The 4 signifies a websocket message
-    // The 2 signifies a websocket event
+    // The 25 signifies a websocket event
     if (length && length > 2 && data[0] == '4' && data[1] == '2')
     {
       auto s = hasData(string(data).substr(0, length));
@@ -154,14 +154,14 @@ int main()
           }
 
           // DEBUG
-          std::cout << "CTE: " << cte << " Steering Value: " << steer_value
-                    << std::endl;
+          // std::cout << "CTE: " << cte << " Steering Value: " << steer_value
+          //           << std::endl;
 
           json msgJson;
           msgJson["steering_angle"] = steer_value;
           msgJson["throttle"] = 0.3;
           auto msg = "42[\"steer\"," + msgJson.dump() + "]";
-          std::cout << msg << std::endl;
+          // std::cout << msg << std::endl;
           ws.send(msg.data(), msg.length(), uWS::OpCode::TEXT);
         } // end "telemetry" if
       }
